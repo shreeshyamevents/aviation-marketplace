@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "name": "King Air 360",
+    "manufacturer": "Beechcraft",
+    "type": "Turboprop",
+    "seats": 9,
+    "range": 1800,
+    "price": 8400000,
+    "promo_property": null,
+    "image": "kingair.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Phenom 300E",
+    "manufacturer": "Embraer",
+    "type": "Light Jet",
+    "seats": 6,
+    "range": 2300,
+    "price": 11400000,
+    "promo_property": "The Palm Jumeirah Penthouse Portfolio",
+    "image": "phenom300.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Citation Latitude",
+    "manufacturer": "Cessna",
+    "type": "Midsize Jet",
+    "seats": 9,
+    "range": 3100,
+    "price": 19000000,
+    "promo_property": null,
+    "image": "latitude.jpg"
+  },
+  {
+    "id": 4,
+    "name": "Gulfstream G700",
+    "manufacturer": "Gulfstream",
+    "type": "Heavy Jet",
+    "seats": 19,
+    "range": 8600,
+    "price": 78000000,
+    "promo_property": "Bel Air Ridge Modern Estate Complex",
+    "image": "g700.jpg"
+  },
+  {
+    "id": 5,
+    "name": "Global 7500",
+    "manufacturer": "Bombardier",
+    "type": "Heavy Jet",
+    "seats": 15,
+    "range": 8850,
+    "price": 75000000,
+    "promo_property": "Monaco Harbor Ocean View Quad-Deck",
+    "image": "global7500.jpg"
+  }
+]

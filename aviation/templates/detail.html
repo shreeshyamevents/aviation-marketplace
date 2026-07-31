@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Back Navigation Link -->
+    <a href="/" class="inline-flex items-center text-xs text-slate-400 hover:text-amber-400 mb-6 transition-colors">
+        <i class="fa-solid fa-arrow-left mr-1.5"></i> Return to Fleet Marketplace
+    </a>
+
+    <!-- Main Detail Board -->
+    <div class="dark-card rounded-2xl p-6 md:p-8 shadow-2xl">
+        <!-- Message Toast Banner for Success Alerts -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-xl text-xs font-bold {% if category == 'success' %}bg-emerald-950 text-emerald-400 border border-emerald-500/30{% else %}bg-rose-950 text-rose-400 border border-rose-500/30{% endif %}">
+                        <i class="fa-solid {% if category == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} mr-1.5"></i>{{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <span class="text-[10px] font-mono tracking-widest text-amber-500 uppercase block mb-1">{{ craft.type }} Class</span>
+        <h1 class="text-3xl font-black tracking-tight text-slate-100 mb-1">{{ craft.name }}</h1>
+        <p class="text-xs text-slate-400 font-mono tracking-wide uppercase mb-6">Engineering Registry: {{ craft.manufacturer }}</p>
+
+        <!-- Real Estate Cross-Promotion Incentive Block -->
+        {% if craft.promo_property %}
+        <div class="bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-500/20 rounded-xl p-5 mb-6">
+            <div class="flex items-center space-x-2 text-emerald-400 font-black text-[10px] tracking-widest uppercase mb-2">
+                <i class="fa-solid fa-house-chimney-crack"></i>
+                <span>Property Partnership Incentive</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                This asset qualifies for a full title transfer with zero auxiliary fees upon the standard closing of: <strong class="text-slate-100 block mt-1 text-sm">{{ craft.promo_property }}</strong>
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Spec Highlights Grid -->
+        <div class="grid grid-cols-2 gap-4 bg-slate-950/50 rounded-xl p-4 border border-slate-800/80 mb-6 text-xs">
+            <div>
+                <span class="text-slate-500 block font-bold uppercase tracking-wider mb-0.5">Continuous Operational Range</span>
+                <span class="text-sm font-bold text-slate-200">{{ craft.range }} Statute Miles</span>
+            </div>
+            <div>
+                <span class="text-slate-500 block font-bold uppercase tracking-wider mb-0.5">Certified Seating Matrix</span>
+                <span class="text-sm font-bold text-slate-200">{{ craft.seats }} Passengers Max</span>
+            </div>
+        </div>
+
+        <!-- Premium Call-To-Action Box -->
+        <div class="border-t border-slate-800/80 pt-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <span class="text-[10px] text-slate-500 uppercase block font-bold">Acquisition Value</span>
+                <span class="text-2xl font-black text-amber-400">${{ "{:,}".format(craft.price) }} <span class="text-xs font-normal text-slate-400">USD</span></span>
+            </div>
+            
+            <!-- Lead Generation Submission Action -->
+            <form action="/submit-inquiry" method="POST" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                <input type="hidden" name="craft_id" value="{{ craft.id }}">
+                <input type="email" name="customer_email" required placeholder="Enter professional email address" 
+                       class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-400 sm:w-64">
+                <button type="submit" class="px-5 py-2.5 gold-gradient text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
+                    Request Dossier Pack
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

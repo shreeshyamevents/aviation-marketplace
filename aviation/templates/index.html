@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Hero Banner -->
+<div class="mb-10 border-b border-slate-800 pb-6 text-center md:text-left">
+    <h1 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Private Fleet Procurement</h1>
+    <p class="text-slate-400 text-sm md:text-base">Match your exact city-to-city travel habits with our modern corporate fleet inventory.</p>
+</div>
+
+<!-- Mission Profile Interactive Filter Bar -->
+<div class="dark-card rounded-2xl p-6 mb-10 shadow-xl">
+    <form method="GET" action="/" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Range Metric Selection -->
+        <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Where do you travel?</label>
+            <select name="range_profile" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                <option value="all">Show All Travel Ranges</option>
+                <option value="city" {% if req_range == 'city' %}selected{% endif %}>Regional / City-to-City (Under 1,200 mi)</option>
+                <option value="country" {% if req_range == 'country' %}selected{% endif %}>Continental / Cross-Country (1,200 - 3,500 mi)</option>
+                <option value="inter" {% if req_range == 'inter' %}selected{% endif %}>Global / Intercontinental (Over 3,500 mi)</option>
+            </select>
+        </div>
+
+        <!-- Seater Breakdown Selection -->
+        <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Cabin Capacity Needed</label>
+            <select name="seating" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                <option value="all">Show Any Seating Count</option>
+                <option value="light" {% if req_seats == 'light' %}selected{% endif %}>Light Utility (1 - 6 Seats)</option>
+                <option value="mid" {% if req_seats == 'mid' %}selected{% endif %}>Executive Midsize (7 - 12 Seats)</option>
+                <option value="heavy" {% if req_seats == 'heavy' %}selected{% endif %}>Heavy Long-Range (13+ Seats)</option>
+            </select>
+        </div>
+
+        <!-- Propulsion Style Selection -->
+        <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Aircraft Propulsion Type</label>
+            <select name="type" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                <option value="all">Show All Engine Styles</option>
+                <option value="Turboprop" {% if req_type == 'Turboprop' %}selected{% endif %}>Turboprop</option>
+                <option value="Light Jet" {% if req_type == 'Light Jet' %}selected{% endif %}>Light Business Jet</option>
+                <option value="Midsize Jet" {% if req_type == 'Midsize Jet' %}selected{% endif %}>Midsize Cabin Jet</option>
+                <option value="Heavy Jet" {% if req_type == 'Heavy Jet' %}selected{% endif %}>Heavy Transcontinental Jet</option>
+            </select>
+        </div>
+
+        <!-- Form Filters Action Commit Buttons -->
+        <div class="md:col-span-3 flex justify-end space-x-3 pt-2">
+            <a href="/" class="px-5 py-2.5 rounded-xl bg-slate-800 text-xs font-bold hover:bg-slate-700 transition-colors">Clear Filters</a>
+            <button type="submit" class="px-7 py-2.5 rounded-xl gold-gradient text-slate-950 text-xs font-black uppercase tracking-wider shadow-md hover:opacity-95">Match My Profile</button>
+        </div>
+    </form>
+</div>
+
+<!-- Catalog Card Layout Engine -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for craft in aircrafts %}
+    <div class="dark-card rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between hover:border-amber-500/30 transition-all duration-300">
+        
+        <div class="p-6">
+            <!-- Property Package Incentive Badge -->
+            {% if craft.promo_property %}
+            <div class="mb-4 inline-flex items-center bg-emerald-950 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-md">
+                <i class="fa-solid fa-gift mr-1.5"></i>Included With Property Purchase
+            </div>
+            {% endif %}
+
+            <span class="block text-slate-500 text-[10px] font-mono tracking-widest uppercase mb-1">{{ craft.type }}</span>
+            <h3 class="text-xl font-bold text-slate-100 tracking-tight">{{ craft.name }}</h3>
+            <span class="text-xs text-slate-400 tracking-wide">Manufacturer: {{ craft.manufacturer }}</span>
+
+            <!-- Core Technical Metrics Row -->
+            <div class="grid grid-cols-2 gap-4 border-t border-b border-slate-800/60 py-3 my-4 text-xs font-medium text-slate-300">
+                <div>
+                    <span class="block text-[10px] text-slate-500 uppercase">Max Range</span>
+                    <span class="text-slate-200 font-bold">{{ craft.range }} miles</span>
+                </div>
+                <div>
+                    <span class="block text-[10px] text-slate-500 uppercase">Max Seating</span>
+                    <span class="text-slate-200 font-bold">{{ craft.seats }} passengers</span>
+                </div>
+            </div>
+
+            <!-- Property Offer Detail Text Block -->
+            {% if craft.promo_property %}
+            <p class="text-xs text-slate-400 bg-slate-950/40 p-3 rounded-xl border border-slate-800/40 leading-relaxed">
+                🎁 Receive this airframe free with title transfer closure of: <strong class="text-slate-200">{{ craft.promo_property }}</strong>.
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Valuation and Inspection Buttons Layer -->
+        <div class="p-6 bg-slate-950/30 border-t border-slate-800/40">
+            <div class="flex items-baseline justify-between mb-4">
+                <span class="text-[10px] text-slate-500 uppercase font-bold">Acquisition Value</span>
+                <span class="text-xl font-black text-amber-400">${{ "{:,}".format(craft.price) }}</span>
+            </div>
+            <a href="/aircraft/{{ craft.id }}" class="block w-full text-center py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold tracking-wider uppercase rounded-xl transition-colors">Inspect Airframe Asset</a>
+        </div>
+        
+    </div>
+    {% else %}
+    <!-- Zero Matches Query Fallback Container -->
+    <div class="col-span-1 md:col-span-3 text-center py-16 dark-card rounded-2xl">
+        <i class="fa-solid fa-plane-slash text-3xl text-slate-600 mb-3"></i>
+        <h4 class="text-base font-bold text-slate-300">No Aircraft Matches Your Criteria</h4>
+        <p class="text-slate-500 text-xs mt-1">Try resetting the drop-downs or shifting range boundaries upwards.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
