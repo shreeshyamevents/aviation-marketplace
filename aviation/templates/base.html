@@ -25,10 +25,6 @@
         </div>
     </nav>
 
-    <!-- Content Target Zone -->
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        {% block content %}{% endblock %}
-    </main>
 <!-- Content Target Zone -->
     <main class="max-w-7xl mx-auto px-4 py-8">
         {% block content %}{% endblock %}
@@ -39,11 +35,10 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/static/service-worker.js')
-                    .then(reg => console.log('Mobile Matrix Service Worker Registered!', reg.scope))
+                    .then(reg => console.log('Mobile Matrix Service Worker Registered!'))
                     .catch(err => console.log('Sync Registration Blocked: ', err));
             });
         }
     </script>
-    
 </body>
 </html>
