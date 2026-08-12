@@ -206,5 +206,68 @@
         "price": "\u20b918,40,00,000",
         "image": "/static/icon-512.png",
         "id": 22
+    },
+    {
+        "name": "Dassault Falcon 2000",
+        "type": "heavy",
+        "range": 3000,
+        "seats": 8,
+        "price": "Inquire",
+        "image": "/static/icon-512.png",
+        "id": 23
+    },
+    {
+        "name": "Beechcraft Premier 1",
+        "type": "light",
+        "range": 1500,
+        "seats": 6,
+        "price": "Inquire",
+        "image": "/static/icon-512.png",
+        "id": 24
+    },
+    {
+        "name": "Dassault Falcon 50EX",
+        "type": "heavy",
+        "range": 3200,
+        "seats": 9,
+        "price": "$6,500,000",
+        "image": "/static/icon-512.png",
+        "id": 25
+    },
+    {
+        "name": "Cessna Citation Latitude",
+        "type": "mid",
+        "range": 2700,
+        "seats": 9,
+        "price": "$16,995,000",
+        "image": "/static/icon-512.png",
+        "id": 26
+    },
+    {
+        "name": "Cessna Citation XLS",
+        "type": "mid",
+        "range": 2100,
+        "seats": 9,
+        "price": "Inquire",
+        "image": "/static/icon-512.png",
+        "id": 27
+    },
+    {
+        "name": "Bombardier Global 5000",
+        "type": "heavy",
+        "range": 5200,
+        "seats": 13,
+        "price": "Inquire",
+        "image": "/static/icon-512.png",
+        "id": 28
+    },
+    {
+        "name": "Bombardier Challenger 300",
+        "type": "mid",
+        "range": 3100,
+        "seats": 10,
+        "price": "Inquire",
+        "image": "/static/icon-512.png",
+        "id": 29
     }
 ]
