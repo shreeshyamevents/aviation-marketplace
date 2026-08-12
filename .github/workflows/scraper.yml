@@ -2,7 +2,6 @@ name: Nightly AI Aircraft Scraper
 
 on:
   schedule:
-    # Runs at 00:00 UTC every day
     - cron: '0 0 * * *'
   workflow_dispatch:
 
@@ -21,7 +20,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install beautifulsoup4 google-generativeai
+          pip install beautifulsoup4 google-genai
 
       - name: Run AI Scraper Script
         working-directory: ./aviation
