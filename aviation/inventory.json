@@ -1,57 +1,210 @@
 [
-  {
-    "id": 1,
-    "name": "King Air 360",
-    "manufacturer": "Beechcraft",
-    "type": "Turboprop",
-    "seats": 9,
-    "range": 1800,
-    "price": 8700000,
-    "promo_property": null,
-    "image": "kingair.jpg"
-  },
-  {
-    "id": 2,
-    "name": "Phenom 300E",
-    "manufacturer": "Embraer",
-    "type": "Light Jet",
-    "seats": 6,
-    "range": 2300,
-    "price": 11400000,
-    "promo_property": "The Palm Jumeirah Penthouse Portfolio",
-    "image": "phenom300.jpg"
-  },
-  {
-    "id": 3,
-    "name": "Citation Latitude",
-    "manufacturer": "Cessna",
-    "type": "Midsize Jet",
-    "seats": 9,
-    "range": 3100,
-    "price": 19000000,
-    "promo_property": null,
-    "image": "latitude.jpg"
-  },
-  {
-    "id": 4,
-    "name": "Gulfstream G700",
-    "manufacturer": "Gulfstream",
-    "type": "Heavy Jet",
-    "seats": 19,
-    "range": 8600,
-    "price": 78000000,
-    "promo_property": "Bel Air Ridge Modern Estate Complex",
-    "image": "g700.jpg"
-  },
-  {
-    "id": 5,
-    "name": "Global 7500",
-    "manufacturer": "Bombardier",
-    "type": "Heavy Jet",
-    "seats": 15,
-    "range": 8850,
-    "price": 75000000,
-    "promo_property": "Monaco Harbor Ocean View Quad-Deck",
-    "image": "global7500.jpg"
-  }
+    {
+        "id": 1,
+        "name": "King Air 360",
+        "manufacturer": "Beechcraft",
+        "type": "Turboprop",
+        "seats": 9,
+        "range": 1800,
+        "price": 8700000,
+        "promo_property": null,
+        "image": "kingair.jpg"
+    },
+    {
+        "id": 2,
+        "name": "Phenom 300E",
+        "manufacturer": "Embraer",
+        "type": "Light Jet",
+        "seats": 6,
+        "range": 2300,
+        "price": 11400000,
+        "promo_property": "The Palm Jumeirah Penthouse Portfolio",
+        "image": "phenom300.jpg"
+    },
+    {
+        "id": 3,
+        "name": "Citation Latitude",
+        "manufacturer": "Cessna",
+        "type": "Midsize Jet",
+        "seats": 9,
+        "range": 3100,
+        "price": 19000000,
+        "promo_property": null,
+        "image": "latitude.jpg"
+    },
+    {
+        "id": 4,
+        "name": "Gulfstream G700",
+        "manufacturer": "Gulfstream",
+        "type": "Heavy Jet",
+        "seats": 19,
+        "range": 8600,
+        "price": 78000000,
+        "promo_property": "Bel Air Ridge Modern Estate Complex",
+        "image": "g700.jpg"
+    },
+    {
+        "id": 5,
+        "name": "Global 7500",
+        "manufacturer": "Bombardier",
+        "type": "Heavy Jet",
+        "seats": 15,
+        "range": 8850,
+        "price": 75000000,
+        "promo_property": "Monaco Harbor Ocean View Quad-Deck",
+        "image": "global7500.jpg"
+    },
+    {
+        "name": "2023 Diamond DA62",
+        "type": "light",
+        "range": 1283,
+        "seats": 7,
+        "price": "\u20b914,90,00,000",
+        "image": "/static/icon-512.png",
+        "id": 6
+    },
+    {
+        "name": "2010 Cirrus SR22-G3 Turbo",
+        "type": "light",
+        "range": 1046,
+        "seats": 5,
+        "price": "\u20b94,25,00,000",
+        "image": "/static/icon-512.png",
+        "id": 7
+    },
+    {
+        "name": "2010 Beechcraft Premier IA",
+        "type": "light",
+        "range": 1430,
+        "seats": 6,
+        "price": "\u20b921,75,00,000",
+        "image": "/static/icon-512.png",
+        "id": 8
+    },
+    {
+        "name": "2023 Piper Archer LX",
+        "type": "light",
+        "range": 522,
+        "seats": 4,
+        "price": "\u20b95,45,00,000",
+        "image": "/static/icon-512.png",
+        "id": 9
+    },
+    {
+        "name": "2021 Cessna Citation M2",
+        "type": "light",
+        "range": 1550,
+        "seats": 7,
+        "price": "\u20b943,15,00,000",
+        "image": "/static/icon-512.png",
+        "id": 10
+    },
+    {
+        "name": "2010 Cessna Citation CJ3",
+        "type": "light",
+        "range": 2040,
+        "seats": 9,
+        "price": "\u20b950,85,00,000",
+        "image": "/static/icon-512.png",
+        "id": 11
+    },
+    {
+        "name": "2012 Bombardier Challenger 605",
+        "type": "heavy",
+        "range": 4000,
+        "seats": 12,
+        "price": "\u20b9118,65,00,000",
+        "image": "/static/icon-512.png",
+        "id": 12
+    },
+    {
+        "name": "2014 Pilatus PC-12 NG",
+        "type": "turboprop",
+        "range": 1845,
+        "seats": 9,
+        "price": "\u20b944,05,00,000",
+        "image": "/static/icon-512.png",
+        "id": 13
+    },
+    {
+        "name": "2013 Learjet 75",
+        "type": "mid",
+        "range": 2040,
+        "seats": 9,
+        "price": "\u20b952,10,00,000",
+        "image": "/static/icon-512.png",
+        "id": 14
+    },
+    {
+        "name": "2013 Bell 407GX",
+        "type": "helicopter",
+        "range": 324,
+        "seats": 7,
+        "price": "\u20b927,75,00,000",
+        "image": "/static/icon-512.png",
+        "id": 15
+    },
+    {
+        "name": "2016 HondaJet APMG",
+        "type": "light",
+        "range": 1223,
+        "seats": 6,
+        "price": "\u20b931,35,00,000",
+        "image": "/static/icon-512.png",
+        "id": 16
+    },
+    {
+        "name": "2017 Beech King Air 250",
+        "type": "turboprop",
+        "range": 1720,
+        "seats": 10,
+        "price": "\u20b943,40,00,000",
+        "image": "/static/icon-512.png",
+        "id": 17
+    },
+    {
+        "name": "2001 Cirrus SR22",
+        "type": "light",
+        "range": 1046,
+        "seats": 5,
+        "price": "\u20b92,26,00,000",
+        "image": "/static/icon-512.png",
+        "id": 18
+    },
+    {
+        "name": "2008 Diamond DA40",
+        "type": "light",
+        "range": 940,
+        "seats": 4,
+        "price": "\u20b93,15,00,000",
+        "image": "/static/icon-512.png",
+        "id": 19
+    },
+    {
+        "name": "2007 Diamond DA42",
+        "type": "light",
+        "range": 910,
+        "seats": 4,
+        "price": "\u20b95,80,00,000",
+        "image": "/static/icon-512.png",
+        "id": 20
+    },
+    {
+        "name": "2009 Embraer Phenom 100",
+        "type": "light",
+        "range": 1178,
+        "seats": 5,
+        "price": "\u20b922,70,00,000",
+        "image": "/static/icon-512.png",
+        "id": 21
+    },
+    {
+        "name": "2017 Cirrus Vision SF50",
+        "type": "light",
+        "range": 1275,
+        "seats": 7,
+        "price": "\u20b918,40,00,000",
+        "image": "/static/icon-512.png",
+        "id": 22
+    }
 ]
