@@ -15,7 +15,7 @@ if not GEMINI_API_KEY:
     exit(1)
 
 client = genai.Client(api_key=GEMINI_API_KEY)
-TARGET_URL = "https://www.planedekhoindia.com/aircraft-for-sale-in-india"
+TARGET_URL = "https://www.aeroclassifieds.com/aircraft/business-jet"
 
 # Candidate models to try in priority order
 MODEL_CANDIDATES = [
