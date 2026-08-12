@@ -17,26 +17,13 @@ if not GEMINI_API_KEY:
 client = genai.Client(api_key=GEMINI_API_KEY)
 TARGET_URL = "https://www.planedekhoindia.com/aircraft-for-sale-in-india"
 
-def get_active_model(client):
-    """Queries the API key to find supported Gemini models automatically."""
-    print("🔍 Auto-detecting available models for your API key...", flush=True)
-    try:
-        available_models = list(client.models.list())
-        for model in available_models:
-            model_id = model.name.split('/')[-1]
-            # Prioritize fast text models
-            if "flash" in model_id:
-                print(f"✅ Auto-selected model: {model_id}", flush=True)
-                return model_id
-        if available_models:
-            fallback = available_models[0].name.split('/')[-1]
-            print(f"✅ Auto-selected fallback model: {fallback}", flush=True)
-            return fallback
-    except Exception as e:
-        print(f"⚠️ Could not query model list: {e}", flush=True)
-    
-    # Standard fallback
-    return "gemini-2.5-flash"
+# Candidate models to try in priority order
+MODEL_CANDIDATES = [
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-flash-latest"
+]
 
 def fetch_page_text(url):
     try:
@@ -55,7 +42,7 @@ def fetch_page_text(url):
         print(f"⚠️ Error fetching {url}: {e}", flush=True)
         return None
 
-def extract_jets_with_gemini(raw_text, model_name):
+def extract_jets_with_gemini(raw_text):
     prompt = f"""
     You are an aviation data parser. Extract aircraft listings from the text into a valid JSON array.
     Each item MUST follow this structure:
@@ -72,21 +59,25 @@ def extract_jets_with_gemini(raw_text, model_name):
     RAW TEXT:
     {raw_text}
     """
-    try:
-        print(f"🤖 Sending data to Gemini AI using [{model_name}]...", flush=True)
-        response = client.models.generate_content(
-            model=model_name,
-            contents=prompt,
-        )
-        
-        match = re.search(r'```json\s*(.*?)\s*```', response.text, re.DOTALL)
-        json_str = match.group(1) if match else response.text
-        parsed = json.loads(json_str)
-        print(f"📊 Gemini extracted {len(parsed)} aircraft.", flush=True)
-        return parsed
-    except Exception as e:
-        print(f"❌ Gemini parsing error: {e}", flush=True)
-        return []
+    
+    for model_name in MODEL_CANDIDATES:
+        try:
+            print(f"🤖 Trying Gemini model: [{model_name}]...", flush=True)
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            
+            match = re.search(r'```json\s*(.*?)\s*```', response.text, re.DOTALL)
+            json_str = match.group(1) if match else response.text
+            parsed = json.loads(json_str)
+            print(f"✅ Success with [{model_name}]! Gemini extracted {len(parsed)} aircraft.", flush=True)
+            return parsed
+        except Exception as e:
+            print(f"⚠️ Model [{model_name}] skipped: {e}", flush=True)
+            
+    print("❌ All model candidates failed.", flush=True)
+    return []
 
 def run_scraper():
     inventory_file = 'inventory.json'
@@ -99,15 +90,12 @@ def run_scraper():
             except Exception:
                 existing_inventory = []
 
-    # Get the supported model dynamically
-    active_model = get_active_model(client)
-
     raw_text = fetch_page_text(TARGET_URL)
     if not raw_text:
         print("❌ Could not pull raw text from website.", flush=True)
         return
 
-    new_jets = extract_jets_with_gemini(raw_text, active_model)
+    new_jets = extract_jets_with_gemini(raw_text)
     if not new_jets:
         print("ℹ️ No aircraft parsed from text.", flush=True)
         return
