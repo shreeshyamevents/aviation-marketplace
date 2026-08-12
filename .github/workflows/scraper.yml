@@ -26,7 +26,8 @@ jobs:
         working-directory: ./aviation
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python scraper.py
+          PYTHONUNBUFFERED: "1"
+        run: python -u scraper.py
 
       - name: Commit & Push Inventory Updates
         working-directory: ./aviation
