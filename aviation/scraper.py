@@ -54,7 +54,7 @@ def extract_jets_with_gemini(raw_text):
     try:
         print("🤖 Sending data to Gemini AI...", flush=True)
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt,
         )
         
