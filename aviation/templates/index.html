@@ -93,7 +93,7 @@
         <div class="p-6 bg-slate-950/30 border-t border-slate-800/40">
             <div class="flex items-baseline justify-between mb-4">
                 <span class="text-[10px] text-slate-500 uppercase font-bold">Acquisition Value</span>
-                <span class="text-xl font-black text-amber-400">${{ "{:,}".format(craft.price) }}</span>
+                <span class="text-xl font-black text-amber-400">{{ craft.price }}</span>
             </div>
             <a href="/aircraft/{{ craft.id }}" class="block w-full text-center py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold tracking-wider uppercase rounded-xl transition-colors">Inspect Airframe Asset</a>
         </div>
