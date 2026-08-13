@@ -1,12 +1,20 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 import json
 import os
 
 app = Flask(__name__)
 
+@app.route('/debug')
+def debug():
+    inventory_path = os.path.join(os.path.dirname(__file__), 'inventory.json')
+    if os.path.exists(inventory_path):
+        with open(inventory_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return jsonify({"file_found": True, "count": len(data), "items": data})
+    return jsonify({"file_found": False, "count": 0, "items": []})
+
 @app.route('/')
 def home():
-    # Construct an absolute path to inventory.json in the same folder as app.py
     inventory_path = os.path.join(os.path.dirname(__file__), 'inventory.json')
     inventory = []
 
@@ -16,9 +24,9 @@ def home():
                 inventory = json.load(f)
         except Exception as e:
             print(f"⚠️ Error reading inventory file: {e}")
-            inventory = []
 
-    return render_template('index.html', inventory=inventory)
+    # Pass 'inventory' under multiple variable names to match index.html
+    return render_template('index.html', inventory=inventory, jets=inventory, aircraft=inventory)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
