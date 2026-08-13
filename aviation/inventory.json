@@ -269,5 +269,14 @@
         "price": "Inquire",
         "image": "/static/icon-512.png",
         "id": 29
+    },
+    {
+        "name": "Dassault Falcon 900EX",
+        "type": "heavy",
+        "range": 4500,
+        "seats": 12,
+        "price": "Inquire",
+        "image": "/static/icon-512.png",
+        "id": 30
     }
 ]
