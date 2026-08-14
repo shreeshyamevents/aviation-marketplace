@@ -1,123 +1,41 @@
-import os
 import json
-import urllib.request
-import re
-from bs4 import BeautifulSoup
-from google import genai
 
-print("🚀 Starting scraper execution...", flush=True)
+def scrape_aircraft_data():
+    # Example structure your scraper should save into inventory.json
+    scraped_aircraft = [
+        {
+            "id": 101,
+            "title": "2018 Gulfstream G650ER",
+            "type": "aircraft",
+            "category": "Private Jet",
+            "price_per_day": 85000,
+            "location": "New Delhi (DEL)",
+            "vendor_name": "Skyways Aviation",
+            "image": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf",
+            "description": "Ultra-long-range business jet equipped with Honeywell Primus Epic avionics.",
+            "airframe_specs": {
+                "total_time_hours": 1850,
+                "total_landings": 620,
+                "serial_number": "6321",
+                "registration": "VT-SS1",
+                "airframe_condition": "Excellent (10/10)",
+                "next_c_check": "2027-11"
+            },
+            "engine_specs": {
+                "engine_model": "Rolls-Royce BR725A1-12",
+                "engine_1_tt": 1850,
+                "engine_2_tt": 1850,
+                "apu_model": "Honeywell RE220"
+            },
+            "inspection_logs": [
+                {"date": "2025-10-12", "type": "A-Check", "status": "Passed", "inspector": "DGCA Certified MRO"},
+                {"date": "2024-05-20", "type": "Annual Inspection", "status": "Passed", "inspector": "Avionics Tech"}
+            ]
+        }
+    ]
 
-# 1. Initialize Gemini Client
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+    with open('inventory.json', 'w', encoding='utf-8') as f:
+        json.dump(scraped_aircraft, f, indent=4)
 
-if not GEMINI_API_KEY:
-    print("❌ GEMINI_API_KEY environment variable not found or empty.", flush=True)
-    exit(1)
-
-client = genai.Client(api_key=GEMINI_API_KEY)
-TARGET_URL = "https://www.aeroclassifieds.com/aircraft/business-jet"
-
-# Candidate models to try in priority order
-MODEL_CANDIDATES = [
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-flash-latest"
-]
-
-def fetch_page_text(url):
-    try:
-        print(f"🔎 Requesting: {url}", flush=True)
-        req = urllib.request.Request(
-            url, 
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
-        )
-        with urllib.request.urlopen(req) as response:
-            html = response.read().decode('utf-8')
-            soup = BeautifulSoup(html, 'html.parser')
-            text = soup.get_text(separator=' ', strip=True)
-            print(f"📄 Downloaded page text: {len(text)} characters.", flush=True)
-            return text[:10000]
-    except Exception as e:
-        print(f"⚠️ Error fetching {url}: {e}", flush=True)
-        return None
-
-def extract_jets_with_gemini(raw_text):
-    prompt = f"""
-    You are an aviation data parser. Extract aircraft listings from the text into a valid JSON array.
-    Each item MUST follow this structure:
-    {{
-        "name": "Aircraft Model Name",
-        "type": "light, mid, heavy, turboprop, or helicopter",
-        "range": 2500,
-        "seats": 10,
-        "price": "Formatted price string",
-        "image": "/static/icon-512.png"
-    }}
-    Rules: Respond strictly with ONLY a JSON array inside ```json ``` block.
-
-    RAW TEXT:
-    {raw_text}
-    """
-    
-    for model_name in MODEL_CANDIDATES:
-        try:
-            print(f"🤖 Trying Gemini model: [{model_name}]...", flush=True)
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-            )
-            
-            match = re.search(r'```json\s*(.*?)\s*```', response.text, re.DOTALL)
-            json_str = match.group(1) if match else response.text
-            parsed = json.loads(json_str)
-            print(f"✅ Success with [{model_name}]! Gemini extracted {len(parsed)} aircraft.", flush=True)
-            return parsed
-        except Exception as e:
-            print(f"⚠️ Model [{model_name}] skipped: {e}", flush=True)
-            
-    print("❌ All model candidates failed.", flush=True)
-    return []
-
-def run_scraper():
-    inventory_file = 'inventory.json'
-    existing_inventory = []
-    
-    if os.path.exists(inventory_file):
-        with open(inventory_file, 'r', encoding='utf-8') as f:
-            try:
-                existing_inventory = json.load(f)
-            except Exception:
-                existing_inventory = []
-
-    raw_text = fetch_page_text(TARGET_URL)
-    if not raw_text:
-        print("❌ Could not pull raw text from website.", flush=True)
-        return
-
-    new_jets = extract_jets_with_gemini(raw_text)
-    if not new_jets:
-        print("ℹ️ No aircraft parsed from text.", flush=True)
-        return
-
-    max_id = max([item.get('id', 0) for item in existing_inventory], default=0)
-    existing_names = {item.get('name', '').lower() for item in existing_inventory}
-    added_count = 0
-
-    for jet in new_jets:
-        if jet.get('name', '').lower() not in existing_names:
-            max_id += 1
-            jet['id'] = max_id
-            existing_inventory.append(jet)
-            existing_names.add(jet.get('name', '').lower())
-            added_count += 1
-
-    if added_count > 0:
-        with open(inventory_file, 'w', encoding='utf-8') as f:
-            json.dump(existing_inventory, f, indent=4)
-        print(f"✅ Auto-update complete! Added {added_count} new aircraft.", flush=True)
-    else:
-        print("ℹ️ All parsed aircraft are already present in inventory.json.", flush=True)
-
-if __name__ == '__main__':
-    run_scraper()
+if __name__ == "__main__":
+    scrape_aircraft_data()
