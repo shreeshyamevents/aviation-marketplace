@@ -18,7 +18,6 @@ def save_inventory(data):
         json.dump(data, f, indent=4)
 
 def filter_phone_numbers(text):
-    # Detects standard 10-digit numbers, spaces, hyphens, and country codes
     phone_pattern = r'(\+?\d{1,3}[-.\s]?)?(\d{10}|\d{5}[-.\s]\d{5}|\d{3}[-.\s]\d{3}[-.\s]\d{4})'
     if re.search(phone_pattern, text):
         cleaned_text = re.sub(phone_pattern, '[PHONE NUMBER RESTRICTED]', text)
@@ -37,9 +36,9 @@ def home():
     for item in inventory:
         if category_filter != 'all' and item.get('category', '').lower() != category_filter.lower():
             continue
-        if type_filter == 'rent' and item.get('type') not in ['rent', 'both']:
+        if type_filter == 'charter' and item.get('type') not in ['charter', 'both']:
             continue
-        elif type_filter == 'sell' and item.get('type') not in ['sell', 'both']:
+        elif type_filter == 'sale' and item.get('type') not in ['sale', 'both']:
             continue
 
         if search_query:
@@ -51,7 +50,7 @@ def home():
 
         filtered_items.append(item)
 
-    categories = ["Private Jets", "Turboprops", "Helicopters", "Sound & Audio", "Lighting & Effects", "Power & Genset"]
+    categories = ["Private Jets", "Turboprops", "Helicopters", "Cargo Aircraft", "Avionics & Engines"]
 
     return render_template('index.html', 
                            items=filtered_items, 
@@ -60,12 +59,12 @@ def home():
                            selected_type=type_filter, 
                            search_query=search_query)
 
-@app.route('/item/<int:item_id>')
-def item_detail(item_id):
+@app.route('/aircraft/<int:item_id>')
+def aircraft_detail(item_id):
     inventory = load_inventory()
     item = next((i for i in inventory if i.get('id') == item_id), None)
     if not item:
-        return "Asset Item Not Found", 404
+        return "Aircraft Asset Not Found", 404
     return render_template('detail.html', item=item)
 
 @app.route('/inspect-airframe/<int:asset_id>')
@@ -78,15 +77,14 @@ def inspect_airframe(asset_id):
         
     return render_template('inspect_airframe.html', aircraft=aircraft)
 
-@app.route('/add-equipment', methods=['GET', 'POST'])
-def add_equipment():
+@app.route('/add-aircraft', methods=['GET', 'POST'])
+def add_aircraft():
     if request.method == 'POST':
         inventory = load_inventory()
         
-        deal_type = request.form.get('type', 'rent')
-        price_per_day = float(request.form.get('price_per_day')) if request.form.get('price_per_day') else None
+        deal_type = request.form.get('type', 'charter')
+        price_per_hour = float(request.form.get('price_per_hour')) if request.form.get('price_per_hour') else None
         sell_price = float(request.form.get('sell_price')) if request.form.get('sell_price') else None
-        security_deposit = float(request.form.get('security_deposit', 0)) if request.form.get('security_deposit') else 0
 
         image_url = request.form.get('image', '').strip()
         if not image_url:
@@ -97,30 +95,29 @@ def add_equipment():
             "title": request.form.get('title'),
             "category": request.form.get('category'),
             "type": deal_type,
-            "price_per_day": price_per_day,
+            "price_per_hour": price_per_hour,
             "sell_price": sell_price,
-            "security_deposit": security_deposit,
             "location": request.form.get('location'),
-            "vendor_name": request.form.get('vendor_name', 'SS Verified Vendor'),
+            "operator_name": request.form.get('operator_name', 'ACE Verified Operator'),
             "rating": 5.0,
             "image": image_url,
             "description": request.form.get('description'),
             "airframe_specs": {
-                "total_time_hours": request.form.get('total_time_hours', 'N/A'),
-                "total_landings": request.form.get('total_landings', 'N/A'),
+                "total_time_hours": request.form.get('total_time_hours', '0'),
+                "total_landings": request.form.get('total_landings', '0'),
                 "serial_number": request.form.get('serial_number', 'SN-PENDING'),
                 "registration": request.form.get('registration', 'VT-PENDING'),
-                "airframe_condition": "Original Verified",
-                "next_c_check": "Pending Schedule"
+                "airframe_condition": "Verified Operational",
+                "next_c_check": "Scheduled"
             },
             "engine_specs": {
-                "engine_model": "Standard Turbofan / Turbine",
+                "engine_model": request.form.get('engine_model', 'Standard Turbine'),
                 "engine_1_tt": 0,
                 "engine_2_tt": 0,
                 "apu_model": "Standard APU"
             },
             "inspection_logs": [
-                {"date": "2026-08-01", "type": "Onboarding Inspection", "status": "Passed", "inspector": "SS Airframe Tech"}
+                {"date": "2026-08-01", "type": "Airworthiness Certificate Verification", "status": "Passed", "inspector": "ACE Aviation MRO"}
             ]
         }
 
@@ -128,8 +125,8 @@ def add_equipment():
         save_inventory(inventory)
         return redirect(url_for('home'))
 
-    categories = ["Private Jets", "Turboprops", "Helicopters", "Sound & Audio", "Lighting & Effects", "Power & Genset"]
-    return render_template('add_equipment.html', categories=categories)
+    categories = ["Private Jets", "Turboprops", "Helicopters", "Cargo Aircraft", "Avionics & Engines"]
+    return render_template('add_aircraft.html', categories=categories)
 
 @app.route('/send-message', methods=['POST'])
 def send_message():
@@ -141,7 +138,7 @@ def send_message():
     if was_blocked:
         return jsonify({
             "status": "warning",
-            "message": "Sharing phone numbers is disabled to maintain escrow warranty on SS Rental.",
+            "message": "Direct contact numbers are restricted to protect escrow and booking compliance.",
             "sanitized_content": filtered_msg
         })
     
