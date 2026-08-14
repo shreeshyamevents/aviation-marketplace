@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SS Rental & Aviation Ecosystem</title>
+    <title>ACE Aviation Marketplace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -25,11 +25,11 @@
     <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-50 backdrop-blur-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <a href="/" class="flex items-center space-x-3">
-                <span class="text-xl font-extrabold tracking-wider text-slate-100 uppercase">SS <span class="gold-text">RENTAL & AVIATION</span></span>
+                <span class="text-xl font-extrabold tracking-wider text-slate-100 uppercase">ACE <span class="gold-text">AVIATION</span></span>
             </a>
             <div class="flex items-center space-x-4">
-                <a href="/add-equipment" class="px-4 py-2.5 rounded-xl gold-btn text-xs font-extrabold tracking-wider uppercase shadow-md hover:brightness-110 transition-all">
-                    <i class="fa-solid fa-plus mr-1.5"></i> List Asset
+                <a href="/add-aircraft" class="px-4 py-2.5 rounded-xl gold-btn text-xs font-extrabold tracking-wider uppercase shadow-md hover:brightness-110 transition-all">
+                    <i class="fa-solid fa-plane-circle-plus mr-1.5"></i> List Aircraft
                 </a>
             </div>
         </div>
@@ -40,7 +40,7 @@
         
         <form method="GET" action="/" class="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="md:col-span-2">
-                <input type="text" name="search" value="{{ search_query }}" placeholder="Search airframes, aircraft, sound, lighting..." class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search aircraft, tail number, location..." class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500">
             </div>
             <div>
                 <select name="category" onchange="this.form.submit()" class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500">
@@ -52,14 +52,14 @@
             </div>
             <div>
                 <select name="type" onchange="this.form.submit()" class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-                    <option value="all" {% if selected_type == 'all' %}selected{% endif %}>All Deal Types</option>
-                    <option value="rent" {% if selected_type == 'rent' %}selected{% endif %}>For Rent / Lease</option>
-                    <option value="sell" {% if selected_type == 'sell' %}selected{% endif %}>For Sale</option>
+                    <option value="all" {% if selected_type == 'all' %}selected{% endif %}>All Listing Types</option>
+                    <option value="charter" {% if selected_type == 'charter' %}selected{% endif %}>Charter / Lease</option>
+                    <option value="sale" {% if selected_type == 'sale' %}selected{% endif %}>Outright Sale</option>
                 </select>
             </div>
         </form>
 
-        <!-- Inventory Grid -->
+        <!-- Aircraft Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for item in items %}
             <div class="dark-card rounded-2xl overflow-hidden flex flex-col justify-between hover:border-amber-500/50 transition-all">
@@ -67,11 +67,11 @@
                     <div class="relative h-48 bg-slate-950 overflow-hidden">
                         <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-full object-cover">
                         <span class="absolute top-3 left-3 bg-slate-950/80 text-amber-400 border border-amber-500/30 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md">
-                            Original Photo
+                            Verified Airframe
                         </span>
-                        {% if item.price_per_day %}
+                        {% if item.price_per_hour %}
                         <span class="absolute bottom-3 right-3 bg-amber-400 text-slate-950 text-xs font-black px-3 py-1 rounded-lg shadow-lg">
-                            ₹{{ "{:,.0f}".format(item.price_per_day) }}/day
+                            ₹{{ "{:,.0f}".format(item.price_per_hour) }}/hr
                         </span>
                         {% endif %}
                     </div>
@@ -82,22 +82,22 @@
                         <p class="text-xs text-slate-400 line-clamp-2 mb-4">{{ item.description }}</p>
 
                         <div class="text-xs text-slate-400 space-y-1 mb-4 border-t border-slate-800/80 pt-3">
-                            <div><i class="fa-solid fa-location-dot text-amber-400 mr-2"></i>{{ item.location }}</div>
-                            <div><i class="fa-solid fa-building text-slate-500 mr-2"></i>{{ item.vendor_name }}</div>
+                            <div><i class="fa-solid fa-location-dot text-amber-400 mr-2"></i>Base: {{ item.location }}</div>
+                            <div><i class="fa-solid fa-plane-up text-slate-500 mr-2"></i>Operator: {{ item.operator_name or item.vendor_name }}</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Button Link -->
+                <!-- Inspection Link -->
                 <div class="px-5 pb-5 pt-0">
                     <a href="/inspect-airframe/{{ item.id }}" class="block w-full text-center py-2.5 rounded-xl border border-amber-500/40 text-amber-400 text-xs font-extrabold uppercase tracking-wider hover:bg-amber-400 hover:text-slate-950 transition-all">
-                        <i class="fa-solid fa-plane-triangle-solid mr-1.5"></i> Inspect Airframe Asset
+                        <i class="fa-solid fa-plane-slant mr-1.5"></i> Inspect Airframe Asset
                     </a>
                 </div>
             </div>
             {% else %}
             <div class="col-span-full text-center py-12 text-slate-500">
-                No assets found matching your criteria.
+                No aircraft assets found matching your query.
             </div>
             {% endfor %}
         </div>
