@@ -4,3 +4,4 @@ Flask-Login
 requests
 gunicorn
 cloudinary
+Flask-APScheduler
