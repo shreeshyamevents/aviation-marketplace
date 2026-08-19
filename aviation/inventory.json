@@ -2,52 +2,40 @@
     {
         "id": 101,
         "title": "2018 Gulfstream G650ER",
-        "category": "Private Jets",
-        "type": "charter",
-        "price_per_hour": 85000,
+        "type": "aircraft",
+        "category": "Private Jet",
+        "price_per_day": 85000,
         "location": "New Delhi (DEL)",
-        "operator_name": "Skyways Aviation",
-        "image": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80",
+        "vendor_name": "Skyways Aviation",
+        "image": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf",
         "description": "Ultra-long-range business jet equipped with Honeywell Primus Epic avionics.",
         "airframe_specs": {
             "total_time_hours": 1850,
             "total_landings": 620,
             "serial_number": "6321",
-            "registration": "VT-SS1"
-        }
-    },
-    {
-        "id": 102,
-        "title": "2021 Bombardier Global 7500",
-        "category": "Private Jets",
-        "type": "charter",
-        "price_per_hour": 95000,
-        "location": "Mumbai (BOM)",
-        "operator_name": "ACE Flight Operations",
-        "image": "https://images.unsplash.com/photo-1519074069444-1ba4edd16be1?auto=format&fit=crop&w=800&q=80",
-        "description": "Flagship business jet offering four true living spaces and smooth flex-wing tech.",
-        "airframe_specs": {
-            "total_time_hours": 920,
-            "total_landings": 310,
-            "serial_number": "7004",
-            "registration": "VT-ACE"
-        }
-    },
-    {
-        "id": 103,
-        "title": "2019 Sikorsky S-92",
-        "category": "Helicopters",
-        "type": "charter",
-        "price_per_hour": 45000,
-        "location": "Bengaluru (BLR)",
-        "operator_name": "Rotary Charter Ltd",
-        "image": "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80",
-        "description": "Heavy twin-engine executive transport helicopter equipped with active vibration control.",
-        "airframe_specs": {
-            "total_time_hours": 1240,
-            "total_landings": 1850,
-            "serial_number": "920311",
-            "registration": "VT-ROT"
-        }
+            "registration": "VT-SS1",
+            "airframe_condition": "Excellent (10/10)",
+            "next_c_check": "2027-11"
+        },
+        "engine_specs": {
+            "engine_model": "Rolls-Royce BR725A1-12",
+            "engine_1_tt": 1850,
+            "engine_2_tt": 1850,
+            "apu_model": "Honeywell RE220"
+        },
+        "inspection_logs": [
+            {
+                "date": "2025-10-12",
+                "type": "A-Check",
+                "status": "Passed",
+                "inspector": "DGCA Certified MRO"
+            },
+            {
+                "date": "2024-05-20",
+                "type": "Annual Inspection",
+                "status": "Passed",
+                "inspector": "Avionics Tech"
+            }
+        ]
     }
 ]
