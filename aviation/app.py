@@ -1,32 +1,39 @@
 import os
 import re
 import uuid
+import cloudinary
+import cloudinary.uploader
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# --- CONFIGURATION ---
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'ace_aviation.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# --- CLOUDINARY CONFIGURATION ---
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
 
-# File Upload Settings
+HAS_CLOUDINARY = bool(CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET)
+
+if HAS_CLOUDINARY:
+    cloudinary.config(
+        cloud_name = CLOUDINARY_CLOUD_NAME,
+        api_key = CLOUDINARY_API_KEY,
+        api_secret = CLOUDINARY_API_SECRET
+    )
+
+# --- LOCAL UPLOAD FALLBACK CONFIG ---
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Max upload size: 16MB
-
-# Ensure upload directory exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-db = SQLAlchemy(app)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- ROUTES ---
+# --- ADD AIRCRAFT ROUTE ---
 @app.route('/add-aircraft', methods=['GET', 'POST'])
 def add_aircraft():
     if request.method == 'POST':
@@ -34,15 +41,23 @@ def add_aircraft():
         price_per_hour = float(request.form.get('price_per_hour')) if request.form.get('price_per_hour') else None
         sell_price = float(request.form.get('sell_price')) if request.form.get('sell_price') else None
 
-        # Process Image File Upload
-        image_url = "/static/uploads/default_aircraft.jpg"
+        # Fallback default image
+        image_url = "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80"
+
+        # Handle uploaded file
         if 'aircraft_image' in request.files:
             file = request.files['aircraft_image']
             if file and file.filename != '' and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-                image_url = f"/static/uploads/{unique_filename}"
+                if HAS_CLOUDINARY:
+                    # Upload directly to Cloudinary cloud storage
+                    upload_result = cloudinary.uploader.upload(file)
+                    image_url = upload_result.get('secure_url', image_url)
+                else:
+                    # Save locally for development testing
+                    filename = secure_filename(file.filename)
+                    unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+                    image_url = f"/static/uploads/{unique_filename}"
 
         new_aircraft = Aircraft(
             title=request.form.get('title'),
