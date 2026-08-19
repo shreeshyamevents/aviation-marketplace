@@ -1,94 +1,32 @@
 import os
 import re
+import uuid
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# Configure SQLite Database
+# --- CONFIGURATION ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'ace_aviation.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# File Upload Settings
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Max upload size: 16MB
+
+# Ensure upload directory exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 db = SQLAlchemy(app)
 
-# --- DATABASE MODELS ---
-class Aircraft(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(150), nullable=False)
-    category = db.Column(db.String(50), nullable=False)
-    type = db.Column(db.String(20), nullable=False) # 'charter' or 'sale'
-    price_per_hour = db.Column(db.Float, nullable=True)
-    sell_price = db.Column(db.Float, nullable=True)
-    location = db.Column(db.String(100), nullable=False)
-    operator_name = db.Column(db.String(100), nullable=False)
-    image = db.Column(db.String(500), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    is_manual = db.Column(db.Boolean, default=True)
-
-    # Airframe Specs
-    total_time_hours = db.Column(db.String(50), default="0")
-    total_landings = db.Column(db.String(50), default="0")
-    serial_number = db.Column(db.String(50), default="SN-PENDING")
-    registration = db.Column(db.String(50), default="VT-PENDING")
-    airframe_condition = db.Column(db.String(50), default="Verified Operational")
-    
-    # Engine Specs
-    engine_model = db.Column(db.String(100), default="Standard Turbine")
-    
-# Initialize DB tables
-with app.app_context():
-    db.create_all()
-
-# --- HELPER FUNCTIONS ---
-def filter_phone_numbers(text):
-    phone_pattern = r'(\+?\d{1,3}[-.\s]?)?(\d{10}|\d{5}[-.\s]\d{5}|\d{3}[-.\s]\d{3}[-.\s]\d{4})'
-    if re.search(phone_pattern, text):
-        cleaned_text = re.sub(phone_pattern, '[PHONE NUMBER RESTRICTED]', text)
-        return cleaned_text, True
-    return text, False
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # --- ROUTES ---
-@app.route('/')
-def home():
-    category_filter = request.args.get('category', 'all')
-    type_filter = request.args.get('type', 'all')
-    search_query = request.args.get('search', '').strip().lower()
-
-    query = Aircraft.query
-
-    if category_filter != 'all':
-        query = query.filter(Aircraft.category.ilike(category_filter))
-    
-    if type_filter == 'charter':
-        query = query.filter(Aircraft.type.in_(['charter', 'both']))
-    elif type_filter == 'sale':
-        query = query.filter(Aircraft.type.in_(['sale', 'both']))
-
-    items = query.all()
-
-    if search_query:
-        items = [
-            item for item in items 
-            if search_query in item.title.lower() 
-            or search_query in item.category.lower() 
-            or search_query in item.location.lower()
-        ]
-
-    categories = ["Private Jets", "Turboprops", "Helicopters", "Cargo Aircraft", "Avionics & Engines"]
-
-    return render_template('index.html', 
-                           items=items, 
-                           categories=categories, 
-                           selected_category=category_filter, 
-                           selected_type=type_filter, 
-                           search_query=search_query)
-
-@app.route('/inspect-airframe/<int:asset_id>')
-def inspect_airframe(asset_id):
-    aircraft = Aircraft.query.get_or_404(asset_id)
-    return render_template('inspect_airframe.html', aircraft=aircraft)
-
 @app.route('/add-aircraft', methods=['GET', 'POST'])
 def add_aircraft():
     if request.method == 'POST':
@@ -96,9 +34,15 @@ def add_aircraft():
         price_per_hour = float(request.form.get('price_per_hour')) if request.form.get('price_per_hour') else None
         sell_price = float(request.form.get('sell_price')) if request.form.get('sell_price') else None
 
-        image_url = request.form.get('image', '').strip()
-        if not image_url:
-            image_url = "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80"
+        # Process Image File Upload
+        image_url = "/static/uploads/default_aircraft.jpg"
+        if 'aircraft_image' in request.files:
+            file = request.files['aircraft_image']
+            if file and file.filename != '' and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+                image_url = f"/static/uploads/{unique_filename}"
 
         new_aircraft = Aircraft(
             title=request.form.get('title'),
@@ -124,26 +68,3 @@ def add_aircraft():
 
     categories = ["Private Jets", "Turboprops", "Helicopters", "Cargo Aircraft", "Avionics & Engines"]
     return render_template('add_aircraft.html', categories=categories)
-
-@app.route('/send-message', methods=['POST'])
-def send_message():
-    data = request.json or {}
-    raw_message = data.get('message', '')
-    
-    filtered_msg, was_blocked = filter_phone_numbers(raw_message)
-    
-    if was_blocked:
-        return jsonify({
-            "status": "warning",
-            "message": "Direct contact numbers are restricted to protect escrow and booking compliance.",
-            "sanitized_content": filtered_msg
-        })
-    
-    return jsonify({
-        "status": "success",
-        "sanitized_content": filtered_msg
-    })
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
