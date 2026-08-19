@@ -1,22 +1,46 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-import json
 import os
 import re
+from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-def load_inventory():
-    path = os.path.join(os.path.dirname(__file__), 'inventory.json')
-    if os.path.exists(path):
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return []
+# Configure SQLite Database
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'ace_aviation.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-def save_inventory(data):
-    path = os.path.join(os.path.dirname(__file__), 'inventory.json')
-    with open(path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4)
+db = SQLAlchemy(app)
 
+# --- DATABASE MODELS ---
+class Aircraft(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    type = db.Column(db.String(20), nullable=False) # 'charter' or 'sale'
+    price_per_hour = db.Column(db.Float, nullable=True)
+    sell_price = db.Column(db.Float, nullable=True)
+    location = db.Column(db.String(100), nullable=False)
+    operator_name = db.Column(db.String(100), nullable=False)
+    image = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    is_manual = db.Column(db.Boolean, default=True)
+
+    # Airframe Specs
+    total_time_hours = db.Column(db.String(50), default="0")
+    total_landings = db.Column(db.String(50), default="0")
+    serial_number = db.Column(db.String(50), default="SN-PENDING")
+    registration = db.Column(db.String(50), default="VT-PENDING")
+    airframe_condition = db.Column(db.String(50), default="Verified Operational")
+    
+    # Engine Specs
+    engine_model = db.Column(db.String(100), default="Standard Turbine")
+    
+# Initialize DB tables
+with app.app_context():
+    db.create_all()
+
+# --- HELPER FUNCTIONS ---
 def filter_phone_numbers(text):
     phone_pattern = r'(\+?\d{1,3}[-.\s]?)?(\d{10}|\d{5}[-.\s]\d{5}|\d{3}[-.\s]\d{3}[-.\s]\d{4})'
     if re.search(phone_pattern, text):
@@ -24,64 +48,50 @@ def filter_phone_numbers(text):
         return cleaned_text, True
     return text, False
 
+# --- ROUTES ---
 @app.route('/')
 def home():
-    inventory = load_inventory()
-    
     category_filter = request.args.get('category', 'all')
     type_filter = request.args.get('type', 'all')
     search_query = request.args.get('search', '').strip().lower()
+
+    query = Aircraft.query
+
+    if category_filter != 'all':
+        query = query.filter(Aircraft.category.ilike(category_filter))
     
-    filtered_items = []
-    for item in inventory:
-        if category_filter != 'all' and item.get('category', '').lower() != category_filter.lower():
-            continue
-        if type_filter == 'charter' and item.get('type') not in ['charter', 'both']:
-            continue
-        elif type_filter == 'sale' and item.get('type') not in ['sale', 'both']:
-            continue
+    if type_filter == 'charter':
+        query = query.filter(Aircraft.type.in_(['charter', 'both']))
+    elif type_filter == 'sale':
+        query = query.filter(Aircraft.type.in_(['sale', 'both']))
 
-        if search_query:
-            title_match = search_query in item.get('title', '').lower()
-            cat_match = search_query in item.get('category', '').lower()
-            loc_match = search_query in item.get('location', '').lower()
-            if not (title_match or cat_match or loc_match):
-                continue
+    items = query.all()
 
-        filtered_items.append(item)
+    if search_query:
+        items = [
+            item for item in items 
+            if search_query in item.title.lower() 
+            or search_query in item.category.lower() 
+            or search_query in item.location.lower()
+        ]
 
     categories = ["Private Jets", "Turboprops", "Helicopters", "Cargo Aircraft", "Avionics & Engines"]
 
     return render_template('index.html', 
-                           items=filtered_items, 
+                           items=items, 
                            categories=categories, 
                            selected_category=category_filter, 
                            selected_type=type_filter, 
                            search_query=search_query)
 
-@app.route('/aircraft/<int:item_id>')
-def aircraft_detail(item_id):
-    inventory = load_inventory()
-    item = next((i for i in inventory if i.get('id') == item_id), None)
-    if not item:
-        return "Aircraft Asset Not Found", 404
-    return render_template('detail.html', item=item)
-
 @app.route('/inspect-airframe/<int:asset_id>')
 def inspect_airframe(asset_id):
-    inventory = load_inventory()
-    aircraft = next((item for item in inventory if item.get('id') == asset_id), None)
-    
-    if not aircraft:
-        return "Airframe Asset Not Found", 404
-        
+    aircraft = Aircraft.query.get_or_404(asset_id)
     return render_template('inspect_airframe.html', aircraft=aircraft)
 
 @app.route('/add-aircraft', methods=['GET', 'POST'])
 def add_aircraft():
     if request.method == 'POST':
-        inventory = load_inventory()
-        
         deal_type = request.form.get('type', 'charter')
         price_per_hour = float(request.form.get('price_per_hour')) if request.form.get('price_per_hour') else None
         sell_price = float(request.form.get('sell_price')) if request.form.get('sell_price') else None
@@ -90,39 +100,26 @@ def add_aircraft():
         if not image_url:
             image_url = "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80"
 
-        new_item = {
-            "id": len(inventory) + 1,
-            "title": request.form.get('title'),
-            "category": request.form.get('category'),
-            "type": deal_type,
-            "price_per_hour": price_per_hour,
-            "sell_price": sell_price,
-            "location": request.form.get('location'),
-            "operator_name": request.form.get('operator_name', 'ACE Verified Operator'),
-            "rating": 5.0,
-            "image": image_url,
-            "description": request.form.get('description'),
-            "airframe_specs": {
-                "total_time_hours": request.form.get('total_time_hours', '0'),
-                "total_landings": request.form.get('total_landings', '0'),
-                "serial_number": request.form.get('serial_number', 'SN-PENDING'),
-                "registration": request.form.get('registration', 'VT-PENDING'),
-                "airframe_condition": "Verified Operational",
-                "next_c_check": "Scheduled"
-            },
-            "engine_specs": {
-                "engine_model": request.form.get('engine_model', 'Standard Turbine'),
-                "engine_1_tt": 0,
-                "engine_2_tt": 0,
-                "apu_model": "Standard APU"
-            },
-            "inspection_logs": [
-                {"date": "2026-08-01", "type": "Airworthiness Certificate Verification", "status": "Passed", "inspector": "ACE Aviation MRO"}
-            ]
-        }
+        new_aircraft = Aircraft(
+            title=request.form.get('title'),
+            category=request.form.get('category'),
+            type=deal_type,
+            price_per_hour=price_per_hour,
+            sell_price=sell_price,
+            location=request.form.get('location'),
+            operator_name=request.form.get('operator_name', 'ACE Verified Operator'),
+            image=image_url,
+            description=request.form.get('description'),
+            total_time_hours=request.form.get('total_time_hours', '0'),
+            total_landings=request.form.get('total_landings', '0'),
+            serial_number=request.form.get('serial_number', 'SN-PENDING'),
+            registration=request.form.get('registration', 'VT-PENDING'),
+            engine_model=request.form.get('engine_model', 'Standard Turbine'),
+            is_manual=True
+        )
 
-        inventory.append(new_item)
-        save_inventory(inventory)
+        db.session.add(new_aircraft)
+        db.session.commit()
         return redirect(url_for('home'))
 
     categories = ["Private Jets", "Turboprops", "Helicopters", "Cargo Aircraft", "Avionics & Engines"]
