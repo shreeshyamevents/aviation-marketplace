@@ -1,41 +1,60 @@
 [
     {
-        "id": 101,
-        "title": "2018 Gulfstream G650ER",
-        "type": "aircraft",
-        "category": "Private Jet",
-        "price_per_day": 85000,
-        "location": "New Delhi (DEL)",
-        "vendor_name": "Skyways Aviation",
-        "image": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf",
-        "description": "Ultra-long-range business jet equipped with Honeywell Primus Epic avionics.",
+        "id": 1,
+        "title": "2021 Bombardier Global 7500",
+        "category": "Private Jets",
+        "type": "charter",
+        "price_per_hour": 95000,
+        "location": "Mumbai (BOM)",
+        "operator_name": "ACE Flight Operations",
+        "image": "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80",
+        "description": "Flagship business jet offering four true living spaces and smooth flex-wing technology.",
+        "is_manual": true,
         "airframe_specs": {
-            "total_time_hours": 1850,
-            "total_landings": 620,
-            "serial_number": "6321",
-            "registration": "VT-SS1",
-            "airframe_condition": "Excellent (10/10)",
-            "next_c_check": "2027-11"
+            "total_time_hours": "920",
+            "total_landings": "310",
+            "serial_number": "7004",
+            "registration": "VT-ACE",
+            "airframe_condition": "Verified Operational",
+            "next_c_check": "2028-03"
         },
         "engine_specs": {
-            "engine_model": "Rolls-Royce BR725A1-12",
-            "engine_1_tt": 1850,
-            "engine_2_tt": 1850,
-            "apu_model": "Honeywell RE220"
+            "engine_model": "GE Passport 20",
+            "engine_1_tt": 920,
+            "engine_2_tt": 920,
+            "apu_model": "Safran SPU300"
         },
         "inspection_logs": [
-            {
-                "date": "2025-10-12",
-                "type": "A-Check",
-                "status": "Passed",
-                "inspector": "DGCA Certified MRO"
-            },
-            {
-                "date": "2024-05-20",
-                "type": "Annual Inspection",
-                "status": "Passed",
-                "inspector": "Avionics Tech"
-            }
+            {"date": "2026-01-15", "type": "Annual Airworthiness Inspection", "status": "Passed", "inspector": "ACE Aviation MRO"}
+        ]
+    },
+    {
+        "id": 2,
+        "title": "2019 Sikorsky S-92",
+        "category": "Helicopters",
+        "type": "charter",
+        "price_per_hour": 45000,
+        "location": "Bengaluru (BLR)",
+        "operator_name": "Rotary Charter Ltd",
+        "image": "https://images.unsplash.com/photo-1519074069444-1ba4edd16be1?auto=format&fit=crop&w=800&q=80",
+        "description": "Heavy twin-engine executive transport helicopter equipped with active vibration control.",
+        "is_manual": true,
+        "airframe_specs": {
+            "total_time_hours": "1240",
+            "total_landings": "1850",
+            "serial_number": "920311",
+            "registration": "VT-ROT",
+            "airframe_condition": "Excellent",
+            "next_c_check": "2027-08"
+        },
+        "engine_specs": {
+            "engine_model": "GE CT7-8A",
+            "engine_1_tt": 1240,
+            "engine_2_tt": 1240,
+            "apu_model": "Honeywell 36-150"
+        },
+        "inspection_logs": [
+            {"date": "2026-06-10", "type": "Rotary Assembly Inspection", "status": "Passed", "inspector": "DGCA Inspector"}
         ]
     }
 ]
