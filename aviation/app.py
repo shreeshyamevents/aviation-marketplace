@@ -87,7 +87,7 @@ class Aircraft(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Initialize database tables with schema reset fallback
+# --- SELF-HEALING DATABASE INITIALIZATION ---
 with app.app_context():
     try:
         db.create_all()
@@ -95,7 +95,7 @@ with app.app_context():
         db.drop_all()
         db.create_all()
 
-# --- BACKGROUND AUTOMATED SCHEDULER ---
+# --- BACKGROUND AUTOMATED SCHEDULER & SCRAPER ---
 app.config['SCHEDULER_API_ENABLED'] = True
 scheduler = APScheduler()
 scheduler.init_app(app)
@@ -105,8 +105,9 @@ AUTOMATED_OPERATOR_FEEDS = [
     {"name": "Pinnacle Air", "url": "https://api.example.com/pinnacle/fleet.json"}
 ]
 
-@scheduler.task('interval', id='auto_fetch_feeds', hours=6)
-def auto_fetch_operator_feeds():
+def run_operator_feed_sync():
+    """Core scraping and ingestion function."""
+    synced_count = 0
     with app.app_context():
         print("Starting scheduled operator feed sync...")
         for feed in AUTOMATED_OPERATOR_FEEDS:
@@ -114,9 +115,40 @@ def auto_fetch_operator_feeds():
                 response = requests.get(feed['url'], timeout=10)
                 if response.status_code == 200:
                     data = response.json()
-                    print(f"Successfully auto-synced feed for {feed['name']}")
+                    if isinstance(data, dict):
+                        data = [data]
+
+                    for row in data:
+                        price_hr = float(row.get('price_per_hour')) if row.get('price_per_hour') else None
+                        sell_p = float(row.get('sell_price')) if row.get('sell_price') else None
+
+                        aircraft = Aircraft(
+                            title=row.get('title', 'Scraped Aircraft Asset'),
+                            category=row.get('category', 'Private Jets'),
+                            type=row.get('type', 'charter'),
+                            price_per_hour=price_hr,
+                            sell_price=sell_p,
+                            location=row.get('location', 'India'),
+                            operator_name=feed['name'],
+                            image=row.get('image_url') or "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80",
+                            description=row.get('description', 'Automated feed import.'),
+                            registration=row.get('registration', 'VT-PENDING'),
+                            total_time_hours=str(row.get('total_time_hours', '0')),
+                            is_manual=False
+                        )
+                        db.session.add(aircraft)
+                        synced_count += 1
+
+                    db.session.commit()
+                    print(f"Successfully auto-synced {synced_count} listings for {feed['name']}")
             except Exception as e:
+                db.session.rollback()
                 print(f"Failed to auto-sync {feed['name']}: {str(e)}")
+    return synced_count
+
+@scheduler.task('interval', id='auto_fetch_feeds', hours=6)
+def auto_fetch_operator_feeds():
+    run_operator_feed_sync()
 
 scheduler.start()
 
@@ -221,7 +253,6 @@ def add_aircraft():
         price_per_hour = float(request.form.get('price_per_hour')) if request.form.get('price_per_hour') else None
         sell_price = float(request.form.get('sell_price')) if request.form.get('sell_price') else None
 
-        # Process Photo Upload
         image_url = "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80"
         if 'aircraft_image' in request.files:
             file = request.files['aircraft_image']
@@ -346,6 +377,14 @@ def import_feed():
             return redirect(request.url)
 
     return render_template('import_feed.html')
+
+# Manual On-Demand Scraper Trigger
+@app.route('/admin/sync-now')
+@login_required
+def trigger_sync_now():
+    count = run_operator_feed_sync()
+    flash(f"Scraper executed! Synced {count} listings from active operator feeds.", "success")
+    return redirect(url_for('home'))
 
 # Message Filter Route
 @app.route('/send-message', methods=['POST'])
