@@ -1,107 +1,157 @@
 <!DOCTYPE html>
-<html lang="en" class="bg-slate-950 text-slate-100">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACE Aviation Marketplace</title>
+    <title>ACE Aviation Marketplace | Private Jets, Turboprops & Helicopters</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .gold-text { color: #f3c649; }
-        .gold-btn {
-            background: linear-gradient(135deg, #f3c649 0%, #b8860b 100%);
-            color: #0b0f19;
+        body {
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-        .dark-card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .gold-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #0b0f19;
+            transition: all 0.2s ease-in-out;
+        }
+        .gold-btn:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans antialiased">
+<body class="min-h-screen flex flex-col justify-between">
 
-    <!-- Header Navigation -->
-    <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <a href="/" class="flex items-center space-x-3">
-                <span class="text-xl font-extrabold tracking-wider text-slate-100 uppercase">ACE <span class="gold-text">AVIATION</span></span>
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            
+            <!-- LOGO -->
+            <a href="/" class="flex items-center gap-2">
+                <span class="text-xl font-black tracking-wider text-amber-400">ACE AVIATION</span>
             </a>
-            <div class="flex items-center space-x-4">
-                <a href="/add-aircraft" class="px-4 py-2.5 rounded-xl gold-btn text-xs font-extrabold tracking-wider uppercase shadow-md hover:brightness-110 transition-all">
-                    <i class="fa-solid fa-plane-circle-plus mr-1.5"></i> List Aircraft
-                </a>
+
+            <!-- NAVIGATION BUTTONS -->
+            <div class="flex items-center gap-4">
+                {% if current_user.is_authenticated %}
+                    <a href="/admin/sync-now" class="text-xs uppercase font-bold text-amber-400 hover:text-amber-300 border border-amber-400/30 px-3 py-2 rounded-lg transition">
+                        ⚡ Sync Feeds Now
+                    </a>
+                    <a href="/admin/import-feed" class="text-xs uppercase font-bold text-slate-300 hover:text-white border border-slate-700 px-3 py-2 rounded-lg transition">
+                        📂 Import Feed
+                    </a>
+                    <a href="/add-aircraft" class="gold-btn px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider">
+                        List Aircraft
+                    </a>
+                    <a href="/logout" class="text-xs font-bold text-slate-400 hover:text-red-400 transition ml-2">
+                        Logout
+                    </a>
+                {% else %}
+                    <a href="/login" class="text-xs font-bold text-slate-300 hover:text-amber-400 transition">
+                        Log In
+                    </a>
+                    <a href="/signup" class="gold-btn px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider">
+                        Register Account
+                    </a>
+                {% endif %}
             </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- Search & Filter Bar -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <form method="GET" action="/" class="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- MAIN CONTENT AREA -->
+    <main class="max-w-7xl mx-auto px-6 py-10 w-full flex-grow">
+
+        <!-- FLASH NOTIFICATION MESSAGES -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="mb-8 p-4 rounded-xl text-xs font-semibold {% if category == 'danger' %}bg-red-500/10 border border-red-500/50 text-red-400{% else %}bg-amber-500/10 border border-amber-500/50 text-amber-400{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- SEARCH & FILTER CONTROLS -->
+        <form method="GET" action="/" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
             <div class="md:col-span-2">
-                <input type="text" name="search" value="{{ search_query }}" placeholder="Search aircraft, tail number, location..." class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search aircraft, tail number, location..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 text-slate-200">
             </div>
             <div>
-                <select name="category" onchange="this.form.submit()" class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-                    <option value="all">All Categories</option>
+                <select name="category" onchange="this.form.submit()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 text-slate-200">
+                    <option value="all" {% if selected_category == 'all' %}selected{% endif %}>All Categories</option>
                     {% for cat in categories %}
-                        <option value="{{ cat }}" {% if selected_category.lower() == cat.lower() %}selected{% endif %}>{{ cat }}</option>
+                        <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div>
-                <select name="type" onchange="this.form.submit()" class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                <select name="type" onchange="this.form.submit()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 text-slate-200">
                     <option value="all" {% if selected_type == 'all' %}selected{% endif %}>All Listing Types</option>
-                    <option value="charter" {% if selected_type == 'charter' %}selected{% endif %}>Charter / Lease</option>
-                    <option value="sale" {% if selected_type == 'sale' %}selected{% endif %}>Outright Sale</option>
+                    <option value="charter" {% if selected_type == 'charter' %}selected{% endif %}>Charter Fleet</option>
+                    <option value="sale" {% if selected_type == 'sale' %}selected{% endif %}>Aircraft for Sale</option>
                 </select>
             </div>
         </form>
 
-        <!-- Aircraft Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for item in items %}
-            <div class="dark-card rounded-2xl overflow-hidden flex flex-col justify-between hover:border-amber-500/50 transition-all">
-                <div>
-                    <div class="relative h-48 bg-slate-950 overflow-hidden">
-                        <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-full object-cover">
-                        <span class="absolute top-3 left-3 bg-slate-950/80 text-amber-400 border border-amber-500/30 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md">
-                            Verified Airframe
-                        </span>
-                        {% if item.price_per_hour %}
-                        <span class="absolute bottom-3 right-3 bg-amber-400 text-slate-950 text-xs font-black px-3 py-1 rounded-lg shadow-lg">
-                            ₹{{ "{:,.0f}".format(item.price_per_hour) }}/hr
-                        </span>
-                        {% endif %}
-                    </div>
-
-                    <div class="p-5">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.category }}</span>
-                        <h3 class="text-lg font-bold text-white mt-1 mb-2">{{ item.title }}</h3>
-                        <p class="text-xs text-slate-400 line-clamp-2 mb-4">{{ item.description }}</p>
-
-                        <div class="text-xs text-slate-400 space-y-1 mb-4 border-t border-slate-800/80 pt-3">
-                            <div><i class="fa-solid fa-location-dot text-amber-400 mr-2"></i>Base: {{ item.location }}</div>
-                            <div><i class="fa-solid fa-plane-up text-slate-500 mr-2"></i>Operator: {{ item.operator_name or item.vendor_name }}</div>
+        <!-- AIRCRAFT LISTINGS GRID -->
+        {% if items %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for item in items %}
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition flex flex-col justify-between">
+                        <div>
+                            <div class="h-48 overflow-hidden relative">
+                                <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-full object-cover">
+                                <span class="absolute top-3 right-3 bg-slate-950/80 text-amber-400 text-[10px] uppercase font-bold px-3 py-1 rounded-full border border-amber-400/20">
+                                    {{ item.category }}
+                                </span>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-lg font-bold text-slate-100 mb-1">{{ item.title }}</h3>
+                                <p class="text-xs text-slate-400 mb-4">📍 {{ item.location }} &bull; Tail: {{ item.registration }}</p>
+                                <p class="text-xs text-slate-400 line-clamp-2 mb-4">{{ item.description }}</p>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0 border-t border-slate-800/50 mt-auto flex items-center justify-between">
+                            <div>
+                                {% if item.price_per_hour %}
+                                    <p class="text-xs text-slate-500 uppercase font-bold">Charter Rate</p>
+                                    <p class="text-sm font-black text-amber-400">₹{{ "{:,.0f}".format(item.price_per_hour) }}/hr</p>
+                                {% elif item.sell_price %}
+                                    <p class="text-xs text-slate-500 uppercase font-bold">Sale Price</p>
+                                    <p class="text-sm font-black text-amber-400">₹{{ "{:,.0f}".format(item.sell_price) }}</p>
+                                {% else %}
+                                    <p class="text-xs text-slate-500 uppercase font-bold">Pricing</p>
+                                    <p class="text-sm font-bold text-slate-300">Contact Operator</p>
+                                {% endif %}
+                            </div>
+                            <a href="/inspect-airframe/{{ item.id }}" class="text-xs uppercase font-bold text-amber-400 hover:text-amber-300">
+                                Inspect &rarr;
+                            </a>
                         </div>
                     </div>
-                </div>
-
-                <!-- Inspection Link -->
-                <div class="px-5 pb-5 pt-0">
-                    <a href="/inspect-airframe/{{ item.id }}" class="block w-full text-center py-2.5 rounded-xl border border-amber-500/40 text-amber-400 text-xs font-extrabold uppercase tracking-wider hover:bg-amber-400 hover:text-slate-950 transition-all">
-                        <i class="fa-solid fa-plane-slant mr-1.5"></i> Inspect Airframe Asset
-                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- EMPTY STATE -->
+            <div class="text-center py-20 border border-slate-800/50 rounded-2xl bg-slate-900/30">
+                <p class="text-slate-400 text-sm mb-4">No aircraft assets found matching your query.</p>
+                <div class="flex items-center justify-center gap-4">
+                    <a href="/admin/import-feed" class="text-xs font-bold text-amber-400 hover:underline">Import CSV Fleet Feed</a>
+                    <span class="text-slate-600">&bull;</span>
+                    <a href="/add-aircraft" class="text-xs font-bold text-amber-400 hover:underline">Add Single Aircraft</a>
                 </div>
             </div>
-            {% else %}
-            <div class="col-span-full text-center py-12 text-slate-500">
-                No aircraft assets found matching your query.
-            </div>
-            {% endfor %}
-        </div>
+        {% endif %}
 
     </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12">
+        &copy; 2026 ACE Aviation Marketplace. B2B Aviation Asset Exchange.
+    </footer>
+
 </body>
 </html>
