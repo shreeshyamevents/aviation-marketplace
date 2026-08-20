@@ -90,6 +90,20 @@ def load_user(user_id):
 # --- DATABASE INITIALIZATION ---
 with app.app_context():
     db.create_all()
+    
+# --- ALWAYS ENSURE ADMIN ACCOUNT EXISTS ---
+with app.app_context():
+    db.create_all()
+    admin_email = "acebusiness0726@gmail.com"
+    if not User.query.filter_by(email=admin_email).first():
+        admin = User(
+            email=admin_email,
+            password_hash=generate_password_hash("Shyam261121"),
+            company_name="ACE Aviation Corporate",
+            role="admin"
+        )
+        db.session.add(admin)
+        db.session.commit()
 
 # --- BACKGROUND AUTOMATED SCHEDULER & SCRAPER ---
 app.config['SCHEDULER_API_ENABLED'] = True
