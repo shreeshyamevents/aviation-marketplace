@@ -85,22 +85,22 @@ class Aircraft(db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
-# --- SELF-HEALING DATABASE INITIALIZATION ---
+# --- DATABASE INITIALIZATION ---
 with app.app_context():
-    try:
-        db.create_all()
-    except Exception:
-        db.drop_all()
-        db.create_all()
+    db.create_all()
 
 # --- BACKGROUND AUTOMATED SCHEDULER & SCRAPER ---
 app.config['SCHEDULER_API_ENABLED'] = True
 scheduler = APScheduler()
 scheduler.init_app(app)
 
-# Live Operator Feeds + Active Sample Backup
+# Fixed, explicit static image URLs (No random rotation)
+DEFAULT_JET_IMAGE = "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80"
+DEFAULT_TURBOPROP_IMAGE = "https://images.unsplash.com/photo-1519074069444-1ba4eff56022?w=800&q=80"
+DEFAULT_HELI_IMAGE = "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800&q=80"
+
 AUTOMATED_OPERATOR_FEEDS = [
     {"name": "TajAir Aviation", "url": "https://api.example.com/tajair/fleet.json"},
     {"name": "Pinnacle Air", "url": "https://api.example.com/pinnacle/fleet.json"}
@@ -117,7 +117,7 @@ FALLBACK_OPERATOR_DATA = [
         "operator_name": "TajAir Aviation",
         "registration": "VT-TAJ",
         "total_time_hours": "320",
-        "image_url": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80",
+        "image_url": DEFAULT_JET_IMAGE,
         "description": "Ultra long-range trimotor jet featuring quiet cabin tech and VIP layout."
     },
     {
@@ -130,7 +130,7 @@ FALLBACK_OPERATOR_DATA = [
         "operator_name": "Pinnacle Air",
         "registration": "VT-PIN",
         "total_time_hours": "850",
-        "image_url": "https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80",
+        "image_url": DEFAULT_TURBOPROP_IMAGE,
         "description": "Versatile twin-turboprop ideal for regional executive hops and short runways."
     },
     {
@@ -143,18 +143,14 @@ FALLBACK_OPERATOR_DATA = [
         "operator_name": "Heligo Charters",
         "registration": "VT-HLG",
         "total_time_hours": "600",
-        "image_url": "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80",
+        "image_url": DEFAULT_HELI_IMAGE,
         "description": "Twin-engine multi-role helicopter configured for VIP corporate transfers."
     }
 ]
 
 def run_operator_feed_sync():
-    """Core scraping and ingestion function with smart fallback."""
     synced_count = 0
     with app.app_context():
-        print("Starting scheduled operator feed sync...")
-        
-        # Try live external API endpoints first
         for feed in AUTOMATED_OPERATOR_FEEDS:
             try:
                 response = requests.get(feed['url'], timeout=5)
@@ -175,7 +171,7 @@ def run_operator_feed_sync():
                             sell_price=sell_p,
                             location=row.get('location', 'India'),
                             operator_name=feed['name'],
-                            image=row.get('image_url') or "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80",
+                            image=row.get('image_url') or DEFAULT_JET_IMAGE,
                             description=row.get('description', 'Automated feed import.'),
                             registration=row.get('registration', 'VT-PENDING'),
                             total_time_hours=str(row.get('total_time_hours', '0')),
@@ -184,12 +180,10 @@ def run_operator_feed_sync():
                         db.session.add(aircraft)
                         synced_count += 1
             except Exception:
-                pass  # Fall through to standard feed parser below if URL fails
+                pass
 
-        # Fallback to active sample inventory if external endpoints are unavailable
         if synced_count == 0:
             for row in FALLBACK_OPERATOR_DATA:
-                # Avoid duplicate registration entries
                 existing = Aircraft.query.filter_by(registration=row['registration']).first()
                 if not existing:
                     aircraft = Aircraft(
@@ -210,7 +204,6 @@ def run_operator_feed_sync():
                     synced_count += 1
 
         db.session.commit()
-        print(f"Feed sync complete. Added {synced_count} listings.")
     return synced_count
 
 @scheduler.task('interval', id='auto_fetch_feeds', hours=6)
@@ -264,22 +257,30 @@ def home():
                            selected_type=type_filter, 
                            search_query=search_query)
 
+# FIX: Route renders 'detail.html' or 'inspect_airframe.html' safely
 @app.route('/inspect-airframe/<int:asset_id>')
 def inspect_airframe(asset_id):
     aircraft = Aircraft.query.get_or_404(asset_id)
-    return render_template('inspect_airframe.html', aircraft=aircraft)
+    try:
+        return render_template('inspect_airframe.html', aircraft=aircraft, item=aircraft)
+    except Exception:
+        return render_template('detail.html', aircraft=aircraft, item=aircraft)
 
-# Authentication Routes
+# FIX: Robust Signup with normalized email formatting
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password')
-        company = request.form.get('company_name')
+        company = request.form.get('company_name', 'ACE Operator')
+
+        if not email or not password:
+            flash('Please provide both email and password.', 'danger')
+            return redirect(url_for('signup'))
 
         if User.query.filter_by(email=email).first():
-            flash('Email already registered.')
-            return redirect(url_for('signup'))
+            flash('Email already registered. Please log in.', 'danger')
+            return redirect(url_for('login'))
 
         hashed_pw = generate_password_hash(password)
         new_user = User(email=email, password_hash=hashed_pw, company_name=company)
@@ -287,31 +288,35 @@ def signup():
         db.session.commit()
 
         login_user(new_user)
+        flash('Account registered successfully!', 'success')
         return redirect(url_for('home'))
 
     return render_template('signup.html')
 
+# FIX: Robust Login matching normalized emails
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password')
+        
         user = User.query.filter_by(email=email).first()
 
         if user and check_password_hash(user.password_hash, password):
-            login_user(user)
+            login_user(user, remember=True)
+            flash('Welcome back!', 'success')
             return redirect(url_for('home'))
         
-        flash('Invalid corporate email or password.')
+        flash('Invalid corporate email or password.', 'danger')
     return render_template('login.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
+    flash('Logged out successfully.', 'success')
     return redirect(url_for('home'))
 
-# Single Aircraft Form Submission
 @app.route('/add-aircraft', methods=['GET', 'POST'])
 @login_required
 def add_aircraft():
@@ -320,7 +325,7 @@ def add_aircraft():
         price_per_hour = float(request.form.get('price_per_hour')) if request.form.get('price_per_hour') else None
         sell_price = float(request.form.get('sell_price')) if request.form.get('sell_price') else None
 
-        image_url = "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80"
+        image_url = DEFAULT_JET_IMAGE
         if 'aircraft_image' in request.files:
             file = request.files['aircraft_image']
             if file and file.filename != '' and allowed_file(file.filename):
@@ -354,12 +359,12 @@ def add_aircraft():
 
         db.session.add(new_aircraft)
         db.session.commit()
+        flash('Aircraft listed successfully!', 'success')
         return redirect(url_for('home'))
 
     categories = ["Private Jets", "Turboprops", "Helicopters", "Cargo Aircraft", "Avionics & Engines"]
     return render_template('add_aircraft.html', categories=categories)
 
-# Admin Bulk CSV/JSON Feed Import
 @app.route('/admin/import-feed', methods=['GET', 'POST'])
 @login_required
 def import_feed():
@@ -394,7 +399,7 @@ def import_feed():
                         sell_price=sell_p,
                         location=row.get('location', 'Unspecified Base'),
                         operator_name=row.get('operator_name', current_user.company_name),
-                        image=row.get('image_url') or "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80",
+                        image=row.get('image_url') or DEFAULT_JET_IMAGE,
                         description=row.get('description', 'Operator bulk imported listing.'),
                         total_time_hours=str(row.get('total_time_hours', '0')),
                         registration=row.get('registration', 'VT-PENDING'),
@@ -421,7 +426,7 @@ def import_feed():
                         sell_price=sell_p,
                         location=row.get('location', 'Unspecified Base'),
                         operator_name=row.get('operator_name', current_user.company_name),
-                        image=row.get('image_url') or "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80",
+                        image=row.get('image_url') or DEFAULT_JET_IMAGE,
                         description=row.get('description', 'Operator bulk imported listing.'),
                         total_time_hours=str(row.get('total_time_hours', '0')),
                         registration=row.get('registration', 'VT-PENDING'),
@@ -435,7 +440,7 @@ def import_feed():
                 return redirect(request.url)
 
             db.session.commit()
-            flash(f'Success! Imported {processed_count} aircraft listings into the database.', 'success')
+            flash(f'Success! Imported {processed_count} aircraft listings.', 'success')
             return redirect(url_for('home'))
 
         except Exception as e:
@@ -445,29 +450,26 @@ def import_feed():
 
     return render_template('import_feed.html')
 
-# Manual On-Demand Scraper Trigger
 @app.route('/admin/sync-now')
 @login_required
 def trigger_sync_now():
     count = run_operator_feed_sync()
     if count > 0:
-        flash(f"Scraper executed! Synced {count} new aircraft listings to the marketplace.", "success")
+        flash(f"Scraper executed! Synced {count} aircraft listings.", "success")
     else:
         flash("Scraper executed! All operator inventory is already up to date.", "info")
     return redirect(url_for('home'))
 
-# Message Filter Route
 @app.route('/send-message', methods=['POST'])
 def send_message():
     data = request.json or {}
     raw_message = data.get('message', '')
-    
     filtered_msg, was_blocked = filter_phone_numbers(raw_message)
     
     if was_blocked:
         return jsonify({
             "status": "warning",
-            "message": "Direct contact numbers are restricted to protect escrow and booking compliance.",
+            "message": "Direct contact numbers are restricted for compliance.",
             "sanitized_content": filtered_msg
         })
     
