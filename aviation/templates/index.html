@@ -34,7 +34,7 @@
             </a>
 
             <!-- NAVIGATION BUTTONS -->
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
                 {% if current_user.is_authenticated %}
                     <a href="/admin/sync-now" class="text-xs uppercase font-bold text-amber-400 hover:text-amber-300 border border-amber-400/30 px-3 py-2 rounded-lg transition">
                         ⚡ Sync Feeds Now
@@ -67,7 +67,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <div class="mb-8 p-4 rounded-xl text-xs font-semibold {% if category == 'danger' %}bg-red-500/10 border border-red-500/50 text-red-400{% else %}bg-amber-500/10 border border-amber-500/50 text-amber-400{% endif %}">
+              <div class="mb-8 p-4 rounded-xl text-xs font-semibold {% if category == 'danger' %}bg-red-500/10 border border-red-500/50 text-red-400{% elif category == 'success' %}bg-emerald-500/10 border border-emerald-500/50 text-emerald-400{% else %}bg-amber-500/10 border border-amber-500/50 text-amber-400{% endif %}">
                 {{ message }}
               </div>
             {% endfor %}
@@ -139,9 +139,15 @@
             <div class="text-center py-20 border border-slate-800/50 rounded-2xl bg-slate-900/30">
                 <p class="text-slate-400 text-sm mb-4">No aircraft assets found matching your query.</p>
                 <div class="flex items-center justify-center gap-4">
-                    <a href="/admin/import-feed" class="text-xs font-bold text-amber-400 hover:underline">Import CSV Fleet Feed</a>
-                    <span class="text-slate-600">&bull;</span>
-                    <a href="/add-aircraft" class="text-xs font-bold text-amber-400 hover:underline">Add Single Aircraft</a>
+                    {% if current_user.is_authenticated %}
+                        <a href="/admin/sync-now" class="text-xs font-bold text-amber-400 hover:underline">⚡ Sync Operator Feeds</a>
+                        <span class="text-slate-600">&bull;</span>
+                        <a href="/admin/import-feed" class="text-xs font-bold text-amber-400 hover:underline">Import CSV Fleet Feed</a>
+                        <span class="text-slate-600">&bull;</span>
+                        <a href="/add-aircraft" class="text-xs font-bold text-amber-400 hover:underline">Add Single Aircraft</a>
+                    {% else %}
+                        <a href="/login" class="text-xs font-bold text-amber-400 hover:underline">Log in to add or sync aircraft assets</a>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}
