@@ -87,9 +87,13 @@ class Aircraft(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Initialize database tables
+# Initialize database tables with schema reset fallback
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception:
+        db.drop_all()
+        db.create_all()
 
 # --- BACKGROUND AUTOMATED SCHEDULER ---
 app.config['SCHEDULER_API_ENABLED'] = True
